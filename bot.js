@@ -5,6 +5,8 @@ const coachLink = process.env.coachLink
 const cron = require('node-cron');
 const { Telegraf, Scenes, session } = require("telegraf")
 const bot = new Telegraf(process.env.botToken)
+
+const sendingMessageErrorHandler = require("./sendingMessageErrorHandler.js");
 const startReplier = require("./startReplier.js");
 
 const { canAccessTrainer, userIsAdmin, nasratTrenirovkami, getUsersToAddTrainings, changeUsersCourses, getCoursesWeeks, getCourseTittle } = require("./bdFunctions");
@@ -36,9 +38,11 @@ bot.use(adminsComposer, trainingsComposer)
 bot.start(ctx => startReplier(ctx));
 
 bot.action("Личный тренер", async ctx => {
-    const backButton = {text: "Назад", callback_data: "backToStart"}
-    if(!await canAccessTrainer(ctx.from.id)) return ctx.reply("Реклама Личного тренера", {reply_markup: {inline_keyboard: [[{text: "Написать менеджеру", url: managerLink}], [{text: "Проверить доступ", callback_data: "Личный тренер"}], [backButton]]}})
-    ctx.reply("сообщение х", {reply_markup: {inline_keyboard: [[{text: "Написать тренеру", url: coachLink}], [backButton]]}})
+    setTimeout(async () => {
+        const backButton = {text: "Назад", callback_data: "backToStart"}
+        if(!await canAccessTrainer(ctx.from.id)) return ctx.reply("Реклама Личного тренера", {reply_markup: {inline_keyboard: [[{text: "Написать менеджеру", url: managerLink}], [{text: "Проверить доступ", callback_data: "Личный тренер"}], [backButton]]}}).catch(err => sendingMessageErrorHandler(err))
+        ctx.reply("сообщение х", {reply_markup: {inline_keyboard: [[{text: "Написать тренеру", url: coachLink}], [backButton]]}}).catch(err => sendingMessageErrorHandler(err))
+    }, 5000);
 })
 
 bot.action("backToStart", ctx => startReplier(ctx))
@@ -93,8 +97,8 @@ cron.schedule("0 12 * * 7", async() => {
             course.week += 1
         })
         await changeUsersCourses(user.chatId, JSON.stringify(user.courses))
-        if(errMsg) await bot.telegram.sendMessage(process.env.managersChatId, `Пользователь "${user.chatId}" полностью прошел курс "${courseTittle}"`).catch(err => console.log(err))
-        await bot.telegram.sendMessage(user.chatId, errMsg ?? `В курс "${courseTittle}" добавлены новые тренировки`).catch(err => console.log(err))
+        if(errMsg) await bot.telegram.sendMessage(process.env.managersChatId, `Пользователь "${user.chatId}" полностью прошел курс "${courseTittle}"`).catch(err => sendingMessageErrorHandler(err))
+        await bot.telegram.sendMessage(user.chatId, errMsg ?? `В курс "${courseTittle}" добавлены новые тренировки`).catch(err => sendingMessageErrorHandler(err))
         next()
     })
 })

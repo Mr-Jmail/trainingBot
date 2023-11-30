@@ -4,22 +4,23 @@ const managerLink = process.env.managerLink
 const { Composer } = require("telegraf");
 const sendMessages = require("../sendMessages");
 const { getUsersTraining, getTrainingsMessages, getActiveCourseId, changeUsersCourses, getUsersCourses } = require("../bdFunctions");
+const sendingMessageErrorHandler = require("../sendingMessageErrorHandler");
 
 var trainingsComposer = new Composer()
 
 trainingsComposer.action("Начать тренировку", async ctx => {
     const backButton = {text: "Назад", callback_data: "backToStart"}
     var activeCourseId = await getActiveCourseId(ctx.from.id)
-    if(!activeCourseId) return ctx.reply("Сообщение с просьбой написать менеджеру за доступом", {reply_markup: {inline_keyboard: [[{text: "Написать менеджеру", url: managerLink}], [{text: "Проверить доступ", callback_data: "Начать тренировку"}], [backButton]]}})
+    if(!activeCourseId) return ctx.reply("Сообщение с просьбой написать менеджеру за доступом", {reply_markup: {inline_keyboard: [[{text: "Написать менеджеру", url: managerLink}], [{text: "Проверить доступ", callback_data: "Начать тренировку"}], [backButton]]}}).catch(err => sendingMessageErrorHandler(err))
     var idOfTrainingToSend = await getUsersTraining(ctx.from.id, activeCourseId)
     console.log(idOfTrainingToSend);
-    if(!idOfTrainingToSend) return await ctx.reply("На этой неделе пройдены все тренировки, нужно дождаться следующей недели чтобы продолжить", {reply_markup: {inline_keyboard: [[backButton]]}})
+    if(!idOfTrainingToSend) return await ctx.reply("На этой неделе пройдены все тренировки, нужно дождаться следующей недели чтобы продолжить", {reply_markup: {inline_keyboard: [[backButton]]}}).catch(err => sendingMessageErrorHandler(err))
     var messages = await getTrainingsMessages(idOfTrainingToSend).catch(err => console.log(err))
     
-    if(messages.length == 0) return await ctx.reply("Произошла ошибка, тренировка не найдена. Обратитесь к менеджеру, чтобы сообщить о проблеме проблему", {reply_markup: {inline_keyboard: [[{text: "Написать менеджеру", url: managerLink}]]}})
+    if(messages.length == 0) return await ctx.reply("Произошла ошибка, тренировка не найдена. Обратитесь к менеджеру, чтобы сообщить о проблеме проблему", {reply_markup: {inline_keyboard: [[{text: "Написать менеджеру", url: managerLink}]]}}).catch(err => sendingMessageErrorHandler(err))
     
     await sendMessages(messages, ctx).catch(async err => console.log(err))
-    await ctx.reply("Когда выполнете все упражнения, нажмите на кнопку ниже", {reply_markup: {inline_keyboard: [[{text: "Завершить тренировку", callback_data: "endTraining" + idOfTrainingToSend}]]}})
+    await ctx.reply("Когда выполнете все упражнения, нажмите на кнопку ниже", {reply_markup: {inline_keyboard: [[{text: "Завершить тренировку", callback_data: "endTraining" + idOfTrainingToSend}]]}}).catch(err => sendingMessageErrorHandler(err))
 })
 
 trainingsComposer.action(/endTraining/ig, async ctx => {
