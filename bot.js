@@ -40,8 +40,8 @@ bot.start(ctx => startReplier(ctx));
 bot.action("Личный тренер", async ctx => {
     setTimeout(async () => {
         const backButton = {text: "Назад", callback_data: "backToStart"}
-        if(!await canAccessTrainer(ctx.from.id)) return ctx.reply("Реклама Личного тренера", {reply_markup: {inline_keyboard: [[{text: "Написать менеджеру", url: managerLink}], [{text: "Проверить доступ", callback_data: "Личный тренер"}], [backButton]]}}).catch(err => sendingMessageErrorHandler(err))
-        ctx.reply("сообщение х", {reply_markup: {inline_keyboard: [[{text: "Написать тренеру", url: coachLink}], [backButton]]}}).catch(err => sendingMessageErrorHandler(err))
+        if(!await canAccessTrainer(ctx.from.id)) return ctx.reply("Чтобы получить доступ к личному тренеру, пожалуйста, отправьте нам сообщение нажав на кнопку \"Написать менеджеру\" 💬🏆", {reply_markup: {inline_keyboard: [[{text: "Написать менеджеру", url: managerLink}], [{text: "Проверить доступ", callback_data: "Личный тренер"}], [backButton]]}}).catch(err => sendingMessageErrorHandler(err))
+        ctx.reply("У Вас есть уникальная возможность общаться напрямую с Иваном Ивановым, вашим профессиональным тренером, чтобы получить персональные советы, задать вопросы и обсудить ваши фитнес-цели.\n\nПросто начните разговор, нажав на кнопку \"Написать тренеру\". 💬💪✨", {reply_markup: {inline_keyboard: [[{text: "Написать тренеру", url: coachLink}], [backButton]]}}).catch(err => sendingMessageErrorHandler(err))
     }, 5000);
 })
 
@@ -92,13 +92,13 @@ cron.schedule("0 12 * * 7", async() => {
         await user.courses.map(course => {
             if(course.id != user.activeCourseId) return
             course.trainings.push()
-            if(!courseWeeks[course.week]) return errMsg = `Вы полностью прошли курс "${courseTittle}". Поздравляю`
+            if(!courseWeeks[course.week]) return errMsg = `Поздравляю! Вы полностью прошли курс ${courseTittle}! 😎`
             course.trainings.push(...courseWeeks[course.week])
             course.week += 1
         })
         await changeUsersCourses(user.chatId, JSON.stringify(user.courses))
         if(errMsg) await bot.telegram.sendMessage(process.env.managersChatId, `Пользователь "${user.chatId}" полностью прошел курс "${courseTittle}"`).catch(err => sendingMessageErrorHandler(err))
-        await bot.telegram.sendMessage(user.chatId, errMsg ?? `В курс "${courseTittle}" добавлены новые тренировки`).catch(err => sendingMessageErrorHandler(err))
+        await bot.telegram.sendMessage(user.chatId, errMsg ?? `В курс «${courseTittle} добавлены новые тренировки! 💪`).catch(err => sendingMessageErrorHandler(err))
         next()
     })
 })

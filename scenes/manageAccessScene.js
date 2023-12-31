@@ -72,6 +72,7 @@ manageAccessScene.action(/giveAccessToCourse/, async ctx => {
 
     await changeUsersCourses(ctx.scene.session.state.usersChatId, JSON.stringify(usersCourses))
     await ctx.reply(errMsg ?? `Пользователю "${ctx.scene.session.state.usersChatId}" предоставлен доступ к курсу "${courseTittle}"`, {reply_markup: {inline_keyboard: [[{text: "Назад", callback_data: "backToSceneStart"}]]}}).catch(err => sendingMessageErrorHandler(err))
+    if(!errMsg) await ctx.telegram.sendMessage(`🌟 Поздравляем!\nВам открыт доступ к курсу "[название курса]".\nНачните тренировки и не забудьте следовать инструкциям  для максимальной пользы.\nУдачи на вашем фитнес-путешествии! 💪🏋️‍♂️`).catch(err => sendingMessageErrorHandler(err))
 })
 
 manageAccessScene.action("canAccessTrainer", async ctx => {
